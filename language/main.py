@@ -3,7 +3,7 @@ from flask import Flask, redirect, render_template, request
 from google.cloud import language
 from google.cloud.language import enums
 from google.cloud.language import types
-from google.protobuf.json_format import MessageToDict,MessageToJson
+from google.protobuf.json_format import MessageToDict, MessageToJson
 from flask_cors import CORS
 import requests
 import yaml
@@ -18,6 +18,7 @@ CORS(app)
 def homepage():
     # Return a Jinja2 HTML template of the homepage.
     return render_template('homepage.html')
+
 
 @app.route('/run_language', methods=['GET', 'POST'])
 def run_language():
@@ -56,14 +57,11 @@ def run_language():
     # from the Natural Language API.
     return render_template('homepage.html', text=text, entities=entities, sentiment=sentiment)
 
-@app.route('/analyze', methods=['GET', 'POST'])
-def analyze():
+def analyze(articletext):
     # Create a Cloud Natural Language client
     client = language.LanguageServiceClient()
 
-    # Retrieve inputted text from the form and create document object
-    text = request.form['text']
-    document = types.Document(content=text, type=enums.Document.Type.PLAIN_TEXT)
+    document = types.Document(content=articletext, type=enums.Document.Type.PLAIN_TEXT)
 
     # Retrieve response from Natural Language API's analyze_entities() method
     response_entities = client.analyze_entities(document)
@@ -76,6 +74,7 @@ def analyze():
 
     return json.dumps({'entities': MessageToDict(response_entities), 'sentiment': MessageToDict(response_sentiment),
                        'category': MessageToDict(response_categories)})
+
 
 @app.route('/fact_check', methods=['GET', 'POST'])
 def check():
@@ -94,6 +93,13 @@ def check():
 
     return json.dumps(ret_cleaned)
 
+
+@app.route('/scrap_website', methods=['GET', 'POST'])
+def scrapwebsite():
+    url = request.form['url']
+    articletext = parse_text_from_url(url)
+    return analyze(articletext)
+
 @app.errorhandler(500)
 def server_error(e):
     return """
@@ -107,7 +113,7 @@ def parse_text_from_url(NEWS_URL):
     article = Article(url)
     article.download()
     article.parse()
-    print(article.text)
+    return article.text
 
 
 if __name__ == '__main__':
