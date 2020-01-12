@@ -2,3 +2,6 @@ Flask==1.0.2
 google-cloud-language==1.1.1
 gunicorn==19.9.0
 flask_cors==3.0.8
+requests==2.22.0
+urllib3==1.25.7
+pyyaml==5.3

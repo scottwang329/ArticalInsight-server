@@ -5,7 +5,8 @@ from google.cloud.language import enums
 from google.cloud.language import types
 from google.protobuf.json_format import MessageToDict,MessageToJson
 from flask_cors import CORS
-
+import requests
+import yaml
 import json
 
 app = Flask(__name__)
@@ -74,6 +75,23 @@ def analyze():
 
     return json.dumps({'entities': MessageToDict(response_entities), 'sentiment': MessageToDict(response_sentiment),
                        'category': MessageToDict(response_categories)})
+
+@app.route('/fact_check', methods=['GET', 'POST'])
+def check():
+    with open(r'config.yaml') as file:
+        documents = yaml.load(file)
+    URL = "https://factchecktools.googleapis.com/v1alpha1/claims:search"
+    PARAMS = {'query': request.form['text'], 'key': documents['google_key']}
+    HEADERS = {"X-Referer": "https://explorer.apis.google.com"}
+
+    response = requests.get(url=URL, params=PARAMS, headers=HEADERS).json()
+    ret = {}
+    ret['results'] = [{'factRatings': item['claimReview'][0]} for item in response['claims']]
+    ret_cleaned = {}
+    ret_cleaned["results"] = [{'truthRating': item['factRatings']['textualRating'],
+                               'url': item['factRatings']['url']} for item in ret['results']]
+
+    return json.dumps(ret_cleaned)
 
 @app.errorhandler(500)
 def server_error(e):
