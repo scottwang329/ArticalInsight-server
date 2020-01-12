@@ -3,8 +3,13 @@ from flask import Flask, redirect, render_template, request
 from google.cloud import language
 from google.cloud.language import enums
 from google.cloud.language import types
+from google.protobuf.json_format import MessageToDict,MessageToJson
+from flask_cors import CORS
+
+import json
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/')
@@ -33,6 +38,23 @@ def run_language():
     # and 'sentiment' variables to the frontend. These contain information retrieved
     # from the Natural Language API.
     return render_template('homepage.html', text=text, entities=entities, sentiment=sentiment)
+
+@app.route('/analyze', methods=['GET', 'POST'])
+def analyze():
+    # Create a Cloud Natural Language client
+    client = language.LanguageServiceClient()
+
+    # Retrieve inputted text from the form and create document object
+    text = request.form['text']
+    document = types.Document(content=text, type=enums.Document.Type.PLAIN_TEXT)
+
+    # Retrieve response from Natural Language API's analyze_entities() method
+    response_entities = client.analyze_entities(document)
+
+    # Retrieve response from Natural Language API's analyze_sentiment() method
+    response_sentiment = client.analyze_sentiment(document)
+
+    return json.dumps({'entities': MessageToDict(response_entities), 'sentiment': MessageToDict(response_sentiment)})
 
 @app.errorhandler(500)
 def server_error(e):
