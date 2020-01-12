@@ -34,6 +34,21 @@ def run_language():
     response = client.analyze_sentiment(document)
     sentiment = response.document_sentiment
 
+    # Retrieve category and confidence level
+    response = client.classify_text(document)
+    categories = response.categories
+
+    result = {}
+    for category in categories:
+        # Turn the categories into a dictionary of the form:
+        # {category.name: category.confidence}, so that they can
+        # be treated as a sparse vector.
+        result[category.name] = category.confidence
+    print(text)
+    for category in categories:
+        text = text + 'category: ' + category.name
+        text = text + 'confidence: ' + str(category.confidence)
+
     # Return a Jinja2 HTML template of the homepage and pass the 'text', 'entities',
     # and 'sentiment' variables to the frontend. These contain information retrieved
     # from the Natural Language API.
@@ -54,7 +69,11 @@ def analyze():
     # Retrieve response from Natural Language API's analyze_sentiment() method
     response_sentiment = client.analyze_sentiment(document)
 
-    return json.dumps({'entities': MessageToDict(response_entities), 'sentiment': MessageToDict(response_sentiment)})
+    # Retrieve category and confidence level
+    response_categories = client.classify_text(document)
+
+    return json.dumps({'entities': MessageToDict(response_entities), 'sentiment': MessageToDict(response_sentiment),
+                       'category': MessageToDict(response_categories)})
 
 @app.errorhandler(500)
 def server_error(e):
