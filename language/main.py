@@ -67,7 +67,14 @@ def analyze(articletext):
         content=articletext, type=enums.Document.Type.PLAIN_TEXT)
 
     # Retrieve response from Natural Language API's analyze_entities() method
-    # response_entities = client.analyze_entities(document)
+    response_entities = client.analyze_entities(document)
+
+    top_three_keywords = MessageToDict(response_entities)
+
+    top_three_keywords_array = []
+
+    for i in range(0, 3):
+        top_three_keywords_array.append(top_three_keywords["entities"][i]["name"])
 
     # Retrieve response from Natural Language API's analyze_sentiment() method
     response_sentiment = client.analyze_sentiment(document)
@@ -78,7 +85,7 @@ def analyze(articletext):
     sentiment = MessageToDict(response_sentiment)["documentSentiment"]
     categories = MessageToDict(response_categories)["categories"]
 
-    return json.dumps({'sentiment': sentiment, 'categories': categories})
+    return json.dumps({'topthreekeywords': top_three_keywords_array, 'sentiment': sentiment, 'categories': categories})
 
 
 @app.route('/fact_check', methods=['GET', 'POST'])
