@@ -8,6 +8,7 @@ from flask_cors import CORS
 import requests
 import yaml
 import json
+from newspaper import Article
 
 app = Flask(__name__)
 CORS(app)
@@ -99,6 +100,14 @@ def server_error(e):
     An internal error occurred: <pre>{}</pre>
     See logs for full stacktrace.
     """.format(e), 500
+
+
+def parse_text_from_url(NEWS_URL):
+    url = NEWS_URL
+    article = Article(url)
+    article.download()
+    article.parse()
+    print(article.text)
 
 
 if __name__ == '__main__':
