@@ -1,8 +1,8 @@
 # Created by https://www.gitignore.io/api/macos
 # Edit at https://www.gitignore.io/?templates=macos
 nwhackers2020-d37945e661f6.json
-./language/env
-./language/config.yaml
+/language/env
+/language/config.yaml
 ### macOS ###
 # General
 .DS_Store
