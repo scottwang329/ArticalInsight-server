@@ -27,7 +27,8 @@ def run_language():
 
     # Retrieve inputted text from the form and create document object
     text = request.form['text']
-    document = types.Document(content=text, type=enums.Document.Type.PLAIN_TEXT)
+    document = types.Document(
+        content=text, type=enums.Document.Type.PLAIN_TEXT)
 
     # Retrieve response from Natural Language API's analyze_entities() method
     response = client.analyze_entities(document)
@@ -57,14 +58,16 @@ def run_language():
     # from the Natural Language API.
     return render_template('homepage.html', text=text, entities=entities, sentiment=sentiment)
 
+
 def analyze(articletext):
     # Create a Cloud Natural Language client
     client = language.LanguageServiceClient()
 
-    document = types.Document(content=articletext, type=enums.Document.Type.PLAIN_TEXT)
+    document = types.Document(
+        content=articletext, type=enums.Document.Type.PLAIN_TEXT)
 
     # Retrieve response from Natural Language API's analyze_entities() method
-    response_entities = client.analyze_entities(document)
+    # response_entities = client.analyze_entities(document)
 
     # Retrieve response from Natural Language API's analyze_sentiment() method
     response_sentiment = client.analyze_sentiment(document)
@@ -72,8 +75,10 @@ def analyze(articletext):
     # Retrieve category and confidence level
     response_categories = client.classify_text(document)
 
-    return json.dumps({'entities': MessageToDict(response_entities), 'sentiment': MessageToDict(response_sentiment),
-                       'category': MessageToDict(response_categories)})
+    sentiment = MessageToDict(response_sentiment)["documentSentiment"]
+    categories = MessageToDict(response_categories)["categories"]
+
+    return json.dumps({'sentiment': sentiment, 'categories': categories})
 
 
 @app.route('/fact_check', methods=['GET', 'POST'])
@@ -86,7 +91,8 @@ def check():
 
     response = requests.get(url=URL, params=PARAMS, headers=HEADERS).json()
     ret = {}
-    ret['results'] = [{'factRatings': item['claimReview'][0]} for item in response['claims']]
+    ret['results'] = [{'factRatings': item['claimReview'][0]}
+                      for item in response['claims']]
     ret_cleaned = {}
     ret_cleaned["results"] = [{'truthRating': item['factRatings']['textualRating'],
                                'url': item['factRatings']['url']} for item in ret['results']]
@@ -99,6 +105,7 @@ def scrapwebsite():
     url = request.form['url']
     articletext = parse_text_from_url(url)
     return analyze(articletext)
+
 
 @app.errorhandler(500)
 def server_error(e):
