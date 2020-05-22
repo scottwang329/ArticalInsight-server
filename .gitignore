@@ -10,6 +10,15 @@ language/config.yaml
 .LSOverride
 
 .vscode/*
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# env folder and private key file
+env/*
+ArticalInsight-server-49f8b928ed71.json
+
 
 # Icon must end with two \r
 Icon
