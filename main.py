@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request
+from flask import Flask, redirect, jsonify, render_template, request
 
 from google.cloud import language
 from google.cloud.language import enums
@@ -7,17 +7,16 @@ from google.protobuf.json_format import MessageToDict, MessageToJson
 from flask_cors import CORS
 import requests
 import yaml
-import json
 from newspaper import Article
 
 app = Flask(__name__)
 CORS(app)
 
 
-@app.route('/')
-def homepage():
-    # Return a Jinja2 HTML template of the homepage.
-    return render_template('homepage.html')
+# @app.route('/')
+# def homepage():
+#     # Return a Jinja2 HTML template of the homepage.
+#     return render_template('homepage.html')
 
 
 @app.route('/run_language', methods=['GET', 'POST'])
@@ -69,12 +68,10 @@ def analyze(articletext):
     # Retrieve response from Natural Language API's analyze_entities() method
     response_entities = client.analyze_entities(document)
 
-    top_three_keywords = MessageToDict(response_entities)
+    keywords = MessageToDict(response_entities)
 
-    top_three_keywords_array = []
-
-    for i in range(0, 3):
-        top_three_keywords_array.append(top_three_keywords["entities"][i]["name"])
+    top_three_keywords = [entity["name"]
+                          for entity in keywords["entities"][:3]]
 
     # Retrieve response from Natural Language API's analyze_sentiment() method
     response_sentiment = client.analyze_sentiment(document)
@@ -82,10 +79,10 @@ def analyze(articletext):
     # Retrieve category and confidence level
     response_categories = client.classify_text(document)
 
-    sentiment = MessageToDict(response_sentiment)["documentSentiment"]
-    categories = MessageToDict(response_categories)["categories"]
+    sentiment = MessageToDict(response_sentiment).get("documentSentiment")
+    categories = MessageToDict(response_categories).get("categories", [])
 
-    return json.dumps({'topthreekeywords': top_three_keywords_array, 'sentiment': sentiment, 'categories': categories})
+    return jsonify({'topthreekeywords': top_three_keywords, 'sentiment': sentiment, 'categories': categories})
 
 
 @app.route('/fact_check', methods=['GET', 'POST'])
@@ -104,7 +101,7 @@ def check():
     ret_cleaned["results"] = [{'truthRating': item['factRatings']['textualRating'],
                                'url': item['factRatings']['url']} for item in ret['results']]
 
-    return json.dumps(ret_cleaned)
+    return jsonify(ret_cleaned)
 
 
 @app.route('/scrap_website', methods=['GET', 'POST'])

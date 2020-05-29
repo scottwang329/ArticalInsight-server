@@ -16,7 +16,7 @@ __pycache__/
 *.py[cod]
 
 # env folder and private key file
-env/*
+venv/*
 ArticalInsight-server-49f8b928ed71.json
 
 
